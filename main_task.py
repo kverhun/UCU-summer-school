@@ -23,7 +23,7 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--save_path', type=str, default='./checkpoints/')
 parser.add_argument('--reconstruct_path', type=str, default='./reconstructions')
-parser.add_argument('--train', action='store_true', default=True)
+parser.add_argument('--train', action='store_true', default=False)
 parser.add_argument('--continue_epoch', type=int, default=10)
 parser.add_argument('--d_z', type=int, default=20, help='dimensionality of latent space')
 args = parser.parse_args()
@@ -69,11 +69,12 @@ class VAE(nn.Module):
         super(VAE, self).__init__()
         #Define your layers hear
 
+        lat_space_size = 2
         self.fc1 = torch.nn.Linear(784, 400)
         self.fc2 = torch.nn.Linear(400, 400)
-        self.fc31 = torch.nn.Linear(400, 20)
-        self.fc32 = torch.nn.Linear(400, 20)
-        self.fc4 = torch.nn.Linear(20, 400)
+        self.fc31 = torch.nn.Linear(400, lat_space_size)
+        self.fc32 = torch.nn.Linear(400, lat_space_size)
+        self.fc4 = torch.nn.Linear(lat_space_size, 400)
         self.fc5 = torch.nn.Linear(400, 784)
 
     def encode(self, x):
@@ -186,11 +187,23 @@ def manifold_visulisation():
     """Task 3. Train VAE with len(z) = 2
     sample z values from closed interval of [-3, 3].
     visualize generated examples on the grid"""
-    xs = None
-    latent_sp_file = os.path.join(args.reconstruct_path, 'latent_{}_{}.jpg'.format(epoch, 'test'))
-    utils.save_image(xs, latent_sp_file, normalize=True)
-    raise NotImplementedError
 
+    sample_size = 900
+
+    z = np.zeros((sample_size, 2))
+    rows = int(np.sqrt(sample_size))
+    row = np.linspace(-3, 3, rows)
+    col = np.linspace(-3, 3, rows)
+    for i in range(0, rows):
+        for j in range(0, rows):
+            z[i*rows+j, 0] = row[i]
+            z[i*rows+j, 1] = col[j]
+
+    z = Variable(torch.from_numpy(z), volatile=True).float()
+    xs = model.decode(z)
+
+    latent_sp_file = os.path.join(args.reconstruct_path, 'latent_{}_{}.jpg'.format(epoch, 'test'))
+    utils.save_image(xs.data.resize_(sample_size,1,28,28), latent_sp_file, normalize=True, nrow=rows)
 
 
 if __name__ == '__main__':
