@@ -68,7 +68,6 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
         #Define your layers hear
-        #self.fc_0 = torch.nn.Linear(400, 400)
 
         self.fc1 = torch.nn.Linear(784, 400)
         self.fc2 = torch.nn.Linear(400, 400)
@@ -77,14 +76,12 @@ class VAE(nn.Module):
         self.fc4 = torch.nn.Linear(20, 400)
         self.fc5 = torch.nn.Linear(400, 784)
 
-        #raise NotImplementedError
-
     def encode(self, x):
         """Task2. Define encoder"""
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        mu = F.relu(self.fc31(x))
-        logvar = F.relu(self.fc32(x))
+        mu = self.fc31(x)
+        logvar = self.fc32(x)
         return mu, logvar
 
     def reparametrize(self, mu, logvar):
@@ -98,11 +95,9 @@ class VAE(nn.Module):
 
     def decode(self, z):
         """Task2. Define decoder"""
-        #raise NotImplementedError
         z = F.relu(self.fc4(z))
-        z = F.relu(self.fc5(z))
+        z = F.sigmoid(self.fc5(z))
         return z
-
 
     def forward(self, x):
         """Task2 define forward path. which should consist of
@@ -111,7 +106,6 @@ class VAE(nn.Module):
         mu, logvar = self.encode(x)
         x = self.reparametrize(mu, logvar)
         x = self.decode(x)
-        #raise NotImplementedError
         return x, mu, logvar
 
     def save_model(self, epoch):
