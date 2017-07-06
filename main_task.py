@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.utils.data
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 from torchvision import datasets, transforms, utils
@@ -67,11 +68,24 @@ class VAE(nn.Module):
     def __init__(self):
         super(VAE, self).__init__()
         #Define your layers hear
-        raise NotImplementedError
+        #self.fc_0 = torch.nn.Linear(400, 400)
+
+        self.fc1 = torch.nn.Linear(784, 400)
+        self.fc2 = torch.nn.Linear(400, 400)
+        self.fc31 = torch.nn.Linear(400, 20)
+        self.fc32 = torch.nn.Linear(400, 20)
+        self.fc4 = torch.nn.Linear(20, 400)
+        self.fc5 = torch.nn.Linear(400, 784)
+
+        #raise NotImplementedError
 
     def encode(self, x):
         """Task2. Define encoder"""
-        raise NotImplementedError
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        mu = F.relu(self.fc31(x))
+        logvar = F.relu(self.fc32(x))
+        return mu, logvar
 
     def reparametrize(self, mu, logvar):
         std = logvar.mul(0.5).exp_()
@@ -84,14 +98,21 @@ class VAE(nn.Module):
 
     def decode(self, z):
         """Task2. Define decoder"""
-        raise NotImplementedError
+        #raise NotImplementedError
+        z = F.relu(self.fc4(z))
+        z = F.relu(self.fc5(z))
+        return z
 
 
     def forward(self, x):
         """Task2 define forward path. which should consist of
         encode reparametrize and decode function calls"""
         x = x.view(-1, 784)
-        raise NotImplementedError
+        mu, logvar = self.encode(x)
+        x = self.reparametrize(mu, logvar)
+        x = self.decode(x)
+        #raise NotImplementedError
+        return x, mu, logvar
 
     def save_model(self, epoch):
         model_file = os.path.join(args.save_path, 'vae_{}.th'.format(epoch))
